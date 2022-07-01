@@ -22,6 +22,7 @@ gcd = 0
 
 images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png'), (168, 272)),
           'player2': pygame.transform.scale(pygame.image.load('images/player3.png'), (168, 272)),
+          'player3': pygame.transform.scale(pygame.image.load('images/player4.png'), (168, 272)),
           'background_main_menu': pygame.transform.scale(pygame.image.load('images/background_main_menu.jpg'),
                                                          (800, 600)),
           'background_wings': pygame.transform.scale(pygame.image.load('images/background_playing_wings.png'),
@@ -41,7 +42,16 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'button_exit_on': pygame.transform.scale(pygame.image.load('images/button_exit_on.png'), (60, 60)),
           'button_play': pygame.transform.scale(pygame.image.load('images/button_play.png'), (60, 60)),
           'button_play_on': pygame.transform.scale(pygame.image.load('images/button_play_on.png'), (60, 60)),
+          'button_clear': pygame.transform.scale(pygame.image.load('images/button_clear.png'), (60, 60)),
           'item_jungle': pygame.transform.scale(pygame.image.load('images/item_jungle.png'), (150, 160))}
+
+
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(pygame.font.match_font('arial'), size)
+    text_surface = font.render(text, True, (150, 75, 0))
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
 
 
 class GameState(Enum):
@@ -69,7 +79,7 @@ class Game:
 
     def _main_loop(self):
         global lose
-        _all_sprites.update()
+        # _all_sprites.update()
         if lose:
             lose = False
             self.game_state = GameState.MAIN_MENU
@@ -151,10 +161,13 @@ class Game:
         count_items = 0
         _all_sprites.update(kill=True)
         Item(images['item_jungle'], _playing_sprites)
-        self._player = Player(images['player'], images['player2'], _playing_sprites, _player_sprites)
+        self._player = Player(images['player'], images['player2'], images['player3'],
+                              _playing_sprites, _player_sprites)
+        self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
 
     def _render_playing(self):
         global cd, gcd
+        _playing_sprites.update()
         if cd == 0:
             gcd = random.randint(60, 140)
             cd = 1
@@ -166,6 +179,7 @@ class Game:
         background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
         self._screen.blit(images[background], (0, 0))
         _playing_sprites.draw(self._screen)
+        draw_text(self._screen, str(count_items), 56, 730, 36)
 
     def _terminate(self):
         pygame.quit()
@@ -182,12 +196,14 @@ class Game:
         pygame.display.flip()
 
     def _render_main_menu(self):
+        _main_menu_sprites.update()
         self._screen.blit(images['background_main_menu'], (0, 0))
         _main_menu_sprites.draw(self._screen)
         if pygame.mouse.get_focused():
             self._screen.blit(images['cursor'], pygame.mouse.get_pos())
 
     def _render_pause_menu(self):
+        _pause_menu_sprites.update()
         background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
         self._screen.blit(images[background], (0, 0))
         _pause_menu_sprites.draw(self._screen)
@@ -196,10 +212,11 @@ class Game:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, sprite_img, sprite_img2, *groups):
+    def __init__(self, sprite_img, sprite_img2, sprite_img3, *groups):
         super().__init__(_all_sprites, *groups)
         self.x, self.y = 10, 0
         self.sprite_img2 = sprite_img2
+        self.sprite_img3 = sprite_img3
         self._init_sprite(sprite_img)
 
     def _init_sprite(self, sprite_img):
@@ -210,8 +227,10 @@ class Player(pygame.sprite.Sprite):
         global health
         if kill:
             self.kill()
-        if health > 0:
+        if health == 3:
             self.image = self.sprite_img2
+        elif health == 6:
+            self.image = self.sprite_img3
         self.y = pygame.mouse.get_pos()[1]
         self.rect = self.image.get_rect().move(self.x, self.y)
 
@@ -222,6 +241,7 @@ class Item(pygame.sprite.Sprite):
         self.x, self.y = 680, random.randint(10, 440)
         self._init_sprite(sprite_img)
         self.speed = random.randint(6, 12)
+        self.out = False
 
     def _init_sprite(self, sprite_img):
         self.image = sprite_img
@@ -231,17 +251,20 @@ class Item(pygame.sprite.Sprite):
         global count_items, lose, health
         if kill:
             self.kill()
+        if self.x <= -150:
+            self.kill()
         self.rect = self.image.get_rect().move(self.x - self.speed, self.y)
         self.x, self.y = self.rect.x, self.rect.y
         player_y = pygame.mouse.get_pos()[1]
-        if self.x <= 150 and self.y in range(player_y - 100, player_y - 20):
-            self.kill()
-            count_items += 1
-            print(count_items)
-        elif self.x <= 150:
-            print('lose')
-            health += 1
-            self.kill()
+        if self.x <= 140 and not self.out:
+            if self.y in range(player_y - 100, player_y - 20) and not self.out:
+                self.kill()
+                count_items += 1
+                print(count_items)
+            else:
+                print('lose')
+                health += 1
+                self.out = True
 
 
 class Button(pygame.sprite.Sprite):
