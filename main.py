@@ -14,7 +14,6 @@ _lose_menu_sprites = pygame.sprite.Group()
 
 FPS = 60
 
-kostil = True
 count_items = 0
 lose = False
 health = 0
@@ -170,11 +169,10 @@ class Game:
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (400, 300), _pause_menu_sprites)
 
     def _init_lose_menu(self):
-        self._init_lose_animation()
+        self._end_animation = False
+        self._lose_animation = Animation(self._player, 2, [images[f'vano{i}'] for i in range(1, 7)])
+        self._animator.add_animation(self._lose_animation)
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
-
-    def _init_lose_animation(self):
-        self._animator.add_animation(Animation(self._player, 30, 3, [images[f'vano{i}'] for i in range(1, 7)]))
 
     def _init_main_menu(self):
         _all_sprites.update(kill=True)
@@ -196,12 +194,11 @@ class Game:
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
 
     def _render_playing(self):
-        global cd, gcd, health, kostil
+        global cd, gcd, health
         _playing_sprites.update()
-        if health == 3 and kostil:
-            kostil = False
-            # health = 0
-            # self.game_state = GameState.LOSE
+        if health == 3:
+            health = 0
+            self.game_state = GameState.LOSE
             self._init_lose_menu()
         if cd == 0:
             gcd = random.randint(60, 140)
@@ -234,11 +231,19 @@ class Game:
         pygame.display.flip()
 
     def _render_lose_menu(self):
-        _lose_menu_sprites.update()
-        self._screen.blit(images['background_lose_menu'], (0, 0))
-        _lose_menu_sprites.draw(self._screen)
-        if pygame.mouse.get_focused():
-            self._screen.blit(images['cursor'], pygame.mouse.get_pos())
+        if self._lose_animation in self._animator.urn:
+            self._end_animation = True
+        if self._end_animation:
+            _lose_menu_sprites.update()
+            self._screen.blit(images['background_lose_menu'], (0, 0))
+            _lose_menu_sprites.draw(self._screen)
+            if pygame.mouse.get_focused():
+                self._screen.blit(images['cursor'], pygame.mouse.get_pos())
+        else:
+            background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
+            self._screen.blit(images[background], (0, 0))
+            _playing_sprites.draw(self._screen)
+            draw_text(self._screen, str(count_items), 56, 730, 36)
 
     def _render_main_menu(self):
         _main_menu_sprites.update()
@@ -259,14 +264,14 @@ class Game:
 class Animator:
     def __init__(self):
         self.storage_animations = []
-        self._urn = []
+        self.urn = []
 
     def update(self):
         for animation in self.storage_animations:
             if animation.update() == 0:
-                self._urn.append(animation)
-        if self.storage_animations and self._urn:
-            for animation in self._urn:
+                self.urn.append(animation)
+        if self.storage_animations and self.urn:
+            for animation in self.urn:
                 self.storage_animations.remove(animation)
 
     def add_animation(self, animation):
@@ -274,19 +279,18 @@ class Animator:
 
 
 class Animation:
-    def __init__(self, obj, speed, time, anim_images):
+    def __init__(self, obj, time: float, anim_images):
         self.images = anim_images
         self.obj = obj
-        self.speed = speed
-        self.time = time
+        self.time = int(FPS * time)
+        self.speed = self.time // len(self.images)
         self.counter = 0
-        print(1)
 
     def update(self):
         if self.counter % self.speed == 0:
             self.obj.change_image(self.images[self.counter // self.speed])
         self.counter += 1
-        if self.counter == FPS * self.time - 1:
+        if self.counter == self.time - 1:
             return 0
         return 1
 
