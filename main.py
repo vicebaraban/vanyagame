@@ -17,8 +17,6 @@ FPS = 60
 count_items = 0
 lose = False
 health = 0
-cd = 0
-gcd = 0
 
 
 images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png'), (168, 272)),
@@ -80,6 +78,7 @@ class Game:
         pygame.mouse.set_visible(False)
         self._init_main_menu()
         self.playing_mode = 0
+        self.cd = self.gcd = 0
         self._animator = Animator()
 
     def run(self):
@@ -194,20 +193,20 @@ class Game:
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
 
     def _render_playing(self):
-        global cd, gcd, health
+        global health
         _playing_sprites.update()
         if health == 3:
             health = 0
             self.game_state = GameState.LOSE
             self._init_lose_menu()
-        if cd == 0:
-            gcd = random.randint(60, 140)
-            cd = 1
-        elif cd == gcd:
-            cd = 0
+        if self.cd == 0:
+            self.gcd = random.randint(60, 140)
+            self.cd = 1
+        elif self.cd == self.gcd:
+            self.cd = 0
             Item(images['item_jungle'], _playing_sprites)
         else:
-            cd += 1
+            self.cd += 1
         background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
         self._screen.blit(images[background], (0, 0))
         _playing_sprites.draw(self._screen)
@@ -267,6 +266,7 @@ class Animator:
         self.urn = []
 
     def update(self):
+        self.urn = []
         for animation in self.storage_animations:
             if animation.update() == 0:
                 self.urn.append(animation)
@@ -334,6 +334,9 @@ class Item(pygame.sprite.Sprite):
         self.image = sprite_img
         self.rect = self.image.get_rect().move(self.x, self.y)
 
+    def change_image(self, img):
+        self.image = img
+
     def update(self, kill=False):
         global count_items, lose, health
         if kill:
@@ -347,7 +350,7 @@ class Item(pygame.sprite.Sprite):
             if self.y in range(player_y - 100, player_y - 20) and not self.out:
                 self.kill()
                 count_items += 1
-            else:
+            elif self.x <= -100:
                 health += 1
                 self.out = True
 
@@ -367,8 +370,8 @@ class Button(pygame.sprite.Sprite):
         self.image = sprite_img
         self.rect = self.image.get_rect().move(self.x1, self.y1)
 
-    def _update_image(self):
-        pass
+    def change_image(self, img):
+        self.image = img
 
     def in_mouse(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()[0] + 30, pygame.mouse.get_pos()[1]
