@@ -7,7 +7,6 @@ import random
 _all_sprites = pygame.sprite.Group()
 _main_menu_sprites = pygame.sprite.Group()
 _pause_menu_sprites = pygame.sprite.Group()
-_player_sprites = pygame.sprite.Group()
 _playing_sprites = pygame.sprite.Group()
 _lose_menu_sprites = pygame.sprite.Group()
 
@@ -22,6 +21,7 @@ health = 0
 images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png'), (168, 272)),
           'player2': pygame.transform.scale(pygame.image.load('images/player3.png'), (168, 272)),
           'player3': pygame.transform.scale(pygame.image.load('images/player4.png'), (168, 272)),
+          'player_hard': pygame.transform.scale(pygame.image.load('images/hard_player.png'), (210, 272)),
           'vano1': pygame.transform.scale(pygame.image.load('images/vano1.png'), (168, 272)),
           'vano2': pygame.transform.scale(pygame.image.load('images/vano2.png'), (168, 272)),
           'vano3': pygame.transform.scale(pygame.image.load('images/vano3.png'), (168, 272)),
@@ -38,6 +38,7 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
                                                       (800, 600)),
           'background_jungle': pygame.transform.scale(pygame.image.load('images/background_playing_jungle.jpeg'),
                                                       (800, 600)),
+          'background_hard': pygame.transform.scale(pygame.image.load('images/background_hard.jpg'), (800, 600)),
           'cursor': pygame.transform.scale(pygame.image.load('images/cursor.png'), (60, 60)),
           'button_jungle': pygame.transform.scale(pygame.image.load('images/button_jungle.png'), (280, 70)),
           'button_jungle_on': pygame.transform.scale(pygame.image.load('images/button_jungle_on.png'), (280, 70)),
@@ -50,12 +51,23 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'button_play': pygame.transform.scale(pygame.image.load('images/button_play.png'), (60, 60)),
           'button_play_on': pygame.transform.scale(pygame.image.load('images/button_play_on.png'), (60, 60)),
           'button_clear': pygame.transform.scale(pygame.image.load('images/button_clear.png'), (60, 60)),
-          'item_jungle': pygame.transform.scale(pygame.image.load('images/item_jungle.png'), (150, 160))}
+          'item_jungle': pygame.transform.scale(pygame.image.load('images/item_jungle.png'), (150, 160)),
+          'hard1': pygame.transform.scale(pygame.image.load('images/hard-mode-1.jpg'), (200, 150)),
+          'hard2': pygame.transform.scale(pygame.image.load('images/hard-mode-2.jpg'), (200, 150)),
+          'hard3': pygame.transform.scale(pygame.image.load('images/hard-mode-3.jpg'), (200, 150)),
+          'hard4': pygame.transform.scale(pygame.image.load('images/hard-mode-4.jpg'), (200, 150)),
+          'hard5': pygame.transform.scale(pygame.image.load('images/hard-mode-5.jpg'), (200, 150)),
+          'hard6': pygame.transform.scale(pygame.image.load('images/hard-mode-6.jpg'), (200, 150)),
+          'hard7': pygame.transform.scale(pygame.image.load('images/hard-mode-7.jpg'), (200, 150)),
+          'hard8': pygame.transform.scale(pygame.image.load('images/hard-mode-8.jpg'), (200, 150)),
+          'hard9': pygame.transform.scale(pygame.image.load('images/hard-mode-9.jpg'), (200, 150)),
+          'hard10': pygame.transform.scale(pygame.image.load('images/hard-mode-10.jpg'), (200, 150)),
+          'hard11': pygame.transform.scale(pygame.image.load('images/hard-mode-11.jpg'), (200, 150))}
 
 
-def draw_text(surf, text, size, x, y):
+def draw_text(surf, text, size, color, x, y):
     font = pygame.font.Font(pygame.font.match_font('arial'), size)
-    text_surface = font.render(text, True, (150, 75, 0))
+    text_surface = font.render(text, True, color)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
@@ -78,7 +90,6 @@ class Game:
         pygame.mouse.set_visible(False)
         self._init_main_menu()
         self.playing_mode = 0
-        self.cd = self.gcd = 0
         self._animator = Animator()
 
     def run(self):
@@ -167,11 +178,16 @@ class Game:
         self._button_play = Button(images['button_play'], images['button_play_on'], (320, 300), _pause_menu_sprites)
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (400, 300), _pause_menu_sprites)
 
-    def _init_lose_menu(self):
-        self._end_animation = False
-        self._lose_animation = Animation(self._player, 2, [images[f'vano{i}'] for i in range(1, 7)])
-        self._animator.add_animation(self._lose_animation)
-        self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
+    def _init_lose_menu(self, hard=False):
+        if not hard:
+            self._end_animation = False
+            self._lose_animation = Animation(self._player, 1.5, [images[f'vano{i}'] for i in range(1, 7)])
+            self._animator.add_animation(self._lose_animation)
+            self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
+        else:
+            self._end_animation = True
+            self._lose_animation = None
+            self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
 
     def _init_main_menu(self):
         _all_sprites.update(kill=True)
@@ -186,31 +202,71 @@ class Game:
         global count_items, health
         health = 0
         count_items = 0
+        self.cd = self.gcd = 0
         _all_sprites.update(kill=True)
-        Item(images['item_jungle'], _playing_sprites)
-        self._player = Player(images['player'], images['player2'], images['player3'],
-                              _playing_sprites, _player_sprites)
+        Item(images['item_jungle'], random.randint(6, 12), _playing_sprites)
+        self._player = Player(images['player'], images['player2'], images['player3'], _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
 
-    def _render_playing(self):
+    def _init_hard_playing(self):
         global health
-        _playing_sprites.update()
-        if health == 3:
-            health = 0
-            self.game_state = GameState.LOSE
-            self._init_lose_menu()
-        if self.cd == 0:
-            self.gcd = random.randint(60, 140)
-            self.cd = 1
-        elif self.cd == self.gcd:
-            self.cd = 0
-            Item(images['item_jungle'], _playing_sprites)
+        health = 0
+        self.cd = self.gcd = 0
+        self.playing_mode = 3
+        _all_sprites.update(kill=True)
+        Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
+        self._player = Player(images['player_hard'], images['player_hard'], images['player_hard'], _playing_sprites)
+        self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
+        self._hard_label = Button(images['hard1'], images['hard1'], (300, 200), _playing_sprites)
+        self._end_animation = False
+        self._hard_label_animation = Animation(self._hard_label, 2, [images[f'hard{i}'] for i in range(2, 12)])
+        self._animator.add_animation(self._hard_label_animation)
+
+    def _render_playing(self):
+        global health, count_items
+        if count_items == 3:
+            _playing_sprites.update()
+            self._init_hard_playing()
+            count_items += 1
+        elif count_items > 3:
+            if self._hard_label_animation in self._animator.urn:
+                self._end_animation = True
+                self._hard_label.kill()
+            if self._end_animation:
+                _playing_sprites.update()
+                if health == 5:
+                    health = 0
+                    self.game_state = GameState.LOSE
+                    self._init_lose_menu(hard=True)
+                if self.cd == 0:
+                    self.gcd = random.randint(20, 50)
+                    self.cd = 1
+                elif self.cd == self.gcd:
+                    self.cd = 0
+                    Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
+                else:
+                    self.cd += 1
+            self._screen.blit(images['background_hard'], (0, 0))
+            _playing_sprites.draw(self._screen)
+            draw_text(self._screen, str(count_items), 56, (150, 75, 0), 730, 36)
         else:
-            self.cd += 1
-        background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
-        self._screen.blit(images[background], (0, 0))
-        _playing_sprites.draw(self._screen)
-        draw_text(self._screen, str(count_items), 56, 730, 36)
+            _playing_sprites.update()
+            if health == 3:
+                health = 0
+                self.game_state = GameState.LOSE
+                self._init_lose_menu()
+            if self.cd == 0:
+                self.gcd = random.randint(60, 140)
+                self.cd = 1
+            elif self.cd == self.gcd:
+                self.cd = 0
+                Item(images['item_jungle'], random.randint(6, 12), _playing_sprites)
+            else:
+                self.cd += 1
+            background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
+            self._screen.blit(images[background], (0, 0))
+            _playing_sprites.draw(self._screen)
+            draw_text(self._screen, str(count_items), 56, (150, 75, 0), 730, 36)
 
     def _terminate(self):
         pygame.quit()
@@ -236,13 +292,15 @@ class Game:
             _lose_menu_sprites.update()
             self._screen.blit(images['background_lose_menu'], (0, 0))
             _lose_menu_sprites.draw(self._screen)
+            draw_text(self._screen, str(count_items), 80, (255, 0, 0), 400, 100)
             if pygame.mouse.get_focused():
                 self._screen.blit(images['cursor'], pygame.mouse.get_pos())
         else:
-            background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
+            background = ['background_jungle', 'background_engine',
+                          'background_wings', 'background_hard'][self.playing_mode]
             self._screen.blit(images[background], (0, 0))
             _playing_sprites.draw(self._screen)
-            draw_text(self._screen, str(count_items), 56, 730, 36)
+            draw_text(self._screen, str(count_items), 56, (155, 75, 0), 730, 36)
 
     def _render_main_menu(self):
         _main_menu_sprites.update()
@@ -253,7 +311,8 @@ class Game:
 
     def _render_pause_menu(self):
         _pause_menu_sprites.update()
-        background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
+        background = ['background_jungle', 'background_engine',
+                      'background_wings', 'background_hard'][self.playing_mode]
         self._screen.blit(images[background], (0, 0))
         _pause_menu_sprites.draw(self._screen)
         if pygame.mouse.get_focused():
@@ -323,11 +382,11 @@ class Player(pygame.sprite.Sprite):
 
 
 class Item(pygame.sprite.Sprite):
-    def __init__(self, sprite_img, *groups):
+    def __init__(self, sprite_img, speed, *groups):
         super().__init__(_all_sprites, *groups)
         self.x, self.y = 680, random.randint(10, 440)
         self._init_sprite(sprite_img)
-        self.speed = random.randint(6, 12)
+        self.speed = speed
         self.out = False
 
     def _init_sprite(self, sprite_img):
@@ -341,18 +400,19 @@ class Item(pygame.sprite.Sprite):
         global count_items, lose, health
         if kill:
             self.kill()
-        if self.x <= -150:
-            self.kill()
-        self.rect = self.image.get_rect().move(self.x - self.speed, self.y)
-        self.x, self.y = self.rect.x, self.rect.y
-        player_y = pygame.mouse.get_pos()[1]
-        if self.x <= 140 and not self.out:
-            if self.y in range(player_y - 100, player_y - 20) and not self.out:
+        else:
+            if self.x <= -150:
                 self.kill()
-                count_items += 1
-            elif self.x <= -100:
-                health += 1
-                self.out = True
+            self.rect = self.image.get_rect().move(self.x - self.speed, self.y)
+            self.x, self.y = self.rect.x, self.rect.y
+            player_y = pygame.mouse.get_pos()[1]
+            if self.x <= 140 and not self.out:
+                if self.y in range(player_y - 100, player_y - 20) and not self.out:
+                    self.kill()
+                    count_items += 1
+                elif self.x <= -100:
+                    health += 1
+                    self.out = True
 
 
 class Button(pygame.sprite.Sprite):
