@@ -3,20 +3,17 @@ import sys
 from enum import Enum, auto
 import random
 
-
 _all_sprites = pygame.sprite.Group()
 _main_menu_sprites = pygame.sprite.Group()
 _pause_menu_sprites = pygame.sprite.Group()
 _playing_sprites = pygame.sprite.Group()
 _lose_menu_sprites = pygame.sprite.Group()
 
-
 FPS = 60
 
 count_items = 0
 lose = False
 health = 0
-
 
 images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png'), (168, 272)),
           'player2': pygame.transform.scale(pygame.image.load('images/player3.png'), (168, 272)),
@@ -62,7 +59,12 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'hard8': pygame.transform.scale(pygame.image.load('images/hard-mode-8.jpg'), (200, 150)),
           'hard9': pygame.transform.scale(pygame.image.load('images/hard-mode-9.jpg'), (200, 150)),
           'hard10': pygame.transform.scale(pygame.image.load('images/hard-mode-10.jpg'), (200, 150)),
-          'hard11': pygame.transform.scale(pygame.image.load('images/hard-mode-11.jpg'), (200, 150))}
+          'hard11': pygame.transform.scale(pygame.image.load('images/hard-mode-11.jpg'), (200, 150)),
+          'pena1': pygame.transform.scale(pygame.image.load('images/pena1.png'), (210, 272)),
+          'pena2': pygame.transform.scale(pygame.image.load('images/pena2.png'), (210, 272)),
+          'pena3': pygame.transform.scale(pygame.image.load('images/pena3.png'), (210, 272)),
+          'pena4': pygame.transform.scale(pygame.image.load('images/pena4.png'), (210, 272)),
+          'pena5': pygame.transform.scale(pygame.image.load('images/pena5.png'), (210, 272)), }
 
 
 def draw_text(surf, text, size, color, x, y):
@@ -215,7 +217,7 @@ class Game:
         self.playing_mode = 3
         _all_sprites.update(kill=True)
         Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
-        self._player = Player(images['player_hard'], images['player_hard'], images['player_hard'], _playing_sprites)
+        self._player = Player(images['player_hard'], images['pena1'], images['pena2'], _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
         self._hard_label = Button(images['hard1'], images['hard1'], (300, 200), _playing_sprites)
         self._end_animation = False
