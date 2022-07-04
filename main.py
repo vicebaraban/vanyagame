@@ -67,7 +67,16 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'pena2': pygame.transform.scale(pygame.image.load('images/pena2.png'), (210, 272)),
           'pena3': pygame.transform.scale(pygame.image.load('images/pena3.png'), (210, 272)),
           'pena4': pygame.transform.scale(pygame.image.load('images/pena4.png'), (210, 272)),
-          'pena5': pygame.transform.scale(pygame.image.load('images/pena5.png'), (210, 272)),}
+          'pena5': pygame.transform.scale(pygame.image.load('images/pena5.png'), (210, 272)),
+          'lose_hard_1': pygame.transform.scale(pygame.image.load('images/lose1.png'), (210, 272)),
+          'lose_hard_2': pygame.transform.scale(pygame.image.load('images/lose2.png'), (210, 272)),
+          'lose_hard_3': pygame.transform.scale(pygame.image.load('images/lose3.png'), (210, 272)),
+          'lose_hard_4': pygame.transform.scale(pygame.image.load('images/lose4.png'), (210, 272)),
+          'lose_hard_5': pygame.transform.scale(pygame.image.load('images/lose5.png'), (210, 272)),
+          'lose_hard_6': pygame.transform.scale(pygame.image.load('images/lose6.png'), (210, 272)),
+          'lose_hard_7': pygame.transform.scale(pygame.image.load('images/lose7.png'), (210, 272)),
+          'lose_hard_8': pygame.transform.scale(pygame.image.load('images/lose8.png'), (210, 272)),
+          'lose_hard_9': pygame.transform.scale(pygame.image.load('images/lose9.png'), (210, 272))}
 
 
 def draw_text(surf, text, size, color, x, y):
@@ -186,12 +195,10 @@ class Game:
     def _init_lose_menu(self, hard=False):
         if not hard:
             self._lose_animation = Animation(self._player, 1.5, [images[f'vano{i}'] for i in range(1, 7)])
-            self._end_animation = False
-            self._animator.add_animation(self._lose_animation)
         else:
-            # self._lose_animation = Animation(self._player, 1.5, [images[f'pena{i}'] for i in range(1, 7)])
-            self._end_animation = True
-            self._lose_animation = None
+            self._lose_animation = Animation(self._player, 3, [images[f'lose_hard_{i}'] for i in range(1, 10)])
+        self._end_animation = False
+        self._animator.add_animation(self._lose_animation)
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
 
     def _init_main_menu(self):
@@ -346,11 +353,12 @@ class Animation:
         self.images = anim_images
         self.obj = obj
         self.time = int(FPS * time)
-        self.speed = self.time // len(self.images)
+        self.speed = self.time // len(self.images) + (1 if self.time % len(self.images) != 0 else 0)
         self.counter = 0
 
     def update(self):
         if self.counter % self.speed == 0:
+            print(self.counter, self.speed, self.time)
             self.obj.change_image(self.images[self.counter // self.speed])
         self.counter += 1
         if self.counter == self.time - 1:
