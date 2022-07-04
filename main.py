@@ -3,11 +3,13 @@ import sys
 from enum import Enum, auto
 import random
 
+
 _all_sprites = pygame.sprite.Group()
 _main_menu_sprites = pygame.sprite.Group()
 _pause_menu_sprites = pygame.sprite.Group()
 _playing_sprites = pygame.sprite.Group()
 _lose_menu_sprites = pygame.sprite.Group()
+
 
 FPS = 60
 
@@ -15,10 +17,11 @@ count_items = 0
 lose = False
 health = 0
 
+
 images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png'), (168, 272)),
           'player2': pygame.transform.scale(pygame.image.load('images/player3.png'), (168, 272)),
           'player3': pygame.transform.scale(pygame.image.load('images/player4.png'), (168, 272)),
-          'player_hard': pygame.transform.scale(pygame.image.load('images/hard_player.png'), (210, 272)),
+          'pena0': pygame.transform.scale(pygame.image.load('images/hard_player.png'), (210, 272)),
           'vano1': pygame.transform.scale(pygame.image.load('images/vano1.png'), (168, 272)),
           'vano2': pygame.transform.scale(pygame.image.load('images/vano2.png'), (168, 272)),
           'vano3': pygame.transform.scale(pygame.image.load('images/vano3.png'), (168, 272)),
@@ -64,7 +67,7 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'pena2': pygame.transform.scale(pygame.image.load('images/pena2.png'), (210, 272)),
           'pena3': pygame.transform.scale(pygame.image.load('images/pena3.png'), (210, 272)),
           'pena4': pygame.transform.scale(pygame.image.load('images/pena4.png'), (210, 272)),
-          'pena5': pygame.transform.scale(pygame.image.load('images/pena5.png'), (210, 272)), }
+          'pena5': pygame.transform.scale(pygame.image.load('images/pena5.png'), (210, 272)),}
 
 
 def draw_text(surf, text, size, color, x, y):
@@ -182,14 +185,14 @@ class Game:
 
     def _init_lose_menu(self, hard=False):
         if not hard:
-            self._end_animation = False
             self._lose_animation = Animation(self._player, 1.5, [images[f'vano{i}'] for i in range(1, 7)])
+            self._end_animation = False
             self._animator.add_animation(self._lose_animation)
-            self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
         else:
+            # self._lose_animation = Animation(self._player, 1.5, [images[f'pena{i}'] for i in range(1, 7)])
             self._end_animation = True
             self._lose_animation = None
-            self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
+        self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
 
     def _init_main_menu(self):
         _all_sprites.update(kill=True)
@@ -207,7 +210,7 @@ class Game:
         self.cd = self.gcd = 0
         _all_sprites.update(kill=True)
         Item(images['item_jungle'], random.randint(6, 12), _playing_sprites)
-        self._player = Player(images['player'], images['player2'], images['player3'], _playing_sprites)
+        self._player = Player((images['player'], images['player2'], images['player3']), _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
 
     def _init_hard_playing(self):
@@ -217,7 +220,7 @@ class Game:
         self.playing_mode = 3
         _all_sprites.update(kill=True)
         Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
-        self._player = Player(images['player_hard'], images['pena1'], images['pena2'], _playing_sprites)
+        self._player = Player([images[f'pena{i}'] for i in range(6)], _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
         self._hard_label = Button(images['hard1'], images['hard1'], (300, 200), _playing_sprites)
         self._end_animation = False
@@ -357,12 +360,11 @@ class Animation:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, sprite_img, sprite_img2, sprite_img3, *groups):
+    def __init__(self, sprites, *groups):
         super().__init__(_all_sprites, *groups)
         self.x, self.y = 10, 0
-        self.sprite_img2 = sprite_img2
-        self.sprite_img3 = sprite_img3
-        self._init_sprite(sprite_img)
+        self.sprites = sprites
+        self._init_sprite(sprites[0])
 
     def _init_sprite(self, sprite_img):
         self.image = sprite_img
@@ -375,10 +377,7 @@ class Player(pygame.sprite.Sprite):
         global health
         if kill:
             self.kill()
-        if health == 1:
-            self.image = self.sprite_img2
-        elif health == 2:
-            self.image = self.sprite_img3
+        self.image = self.sprites[health]
         self.y = pygame.mouse.get_pos()[1]
         self.rect = self.image.get_rect().move(self.x, self.y)
 
