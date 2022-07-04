@@ -229,17 +229,16 @@ class Game:
 
     def _render_playing(self):
         global health, count_items
-        if count_items == 3:
+        if count_items == 3 and self.playing_mode != 3:
             _playing_sprites.update()
             self._init_hard_playing()
-            count_items += 1
-        elif count_items > 3:
+        elif self.playing_mode == 3:
             if self._hard_label_animation in self._animator.urn:
                 self._end_animation = True
                 self._hard_label.kill()
             if self._end_animation:
                 _playing_sprites.update()
-                if health == 5:
+                if health == 6:
                     health = 0
                     self.game_state = GameState.LOSE
                     self._init_lose_menu(hard=True)
