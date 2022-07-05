@@ -9,6 +9,7 @@ _main_menu_sprites = pygame.sprite.Group()
 _pause_menu_sprites = pygame.sprite.Group()
 _playing_sprites = pygame.sprite.Group()
 _lose_menu_sprites = pygame.sprite.Group()
+_label_sprites = pygame.sprite.Group()
 
 
 FPS = 60
@@ -52,17 +53,18 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'button_play_on': pygame.transform.scale(pygame.image.load('images/button_play_on.png'), (60, 60)),
           'button_clear': pygame.transform.scale(pygame.image.load('images/button_clear.png'), (60, 60)),
           'item_jungle': pygame.transform.scale(pygame.image.load('images/item_jungle.png'), (150, 160)),
-          'hard1': pygame.transform.scale(pygame.image.load('images/hard-mode-1.jpg'), (200, 150)),
-          'hard2': pygame.transform.scale(pygame.image.load('images/hard-mode-2.jpg'), (200, 150)),
-          'hard3': pygame.transform.scale(pygame.image.load('images/hard-mode-3.jpg'), (200, 150)),
-          'hard4': pygame.transform.scale(pygame.image.load('images/hard-mode-4.jpg'), (200, 150)),
-          'hard5': pygame.transform.scale(pygame.image.load('images/hard-mode-5.jpg'), (200, 150)),
-          'hard6': pygame.transform.scale(pygame.image.load('images/hard-mode-6.jpg'), (200, 150)),
-          'hard7': pygame.transform.scale(pygame.image.load('images/hard-mode-7.jpg'), (200, 150)),
-          'hard8': pygame.transform.scale(pygame.image.load('images/hard-mode-8.jpg'), (200, 150)),
-          'hard9': pygame.transform.scale(pygame.image.load('images/hard-mode-9.jpg'), (200, 150)),
-          'hard10': pygame.transform.scale(pygame.image.load('images/hard-mode-10.jpg'), (200, 150)),
-          'hard11': pygame.transform.scale(pygame.image.load('images/hard-mode-11.jpg'), (200, 150)),
+          'banana_hard': pygame.transform.scale(pygame.image.load('images/banana_hard.png'), (180, 160)),
+          'hard1': pygame.transform.scale(pygame.image.load('images/hard-mode-1.jpg'), (800, 600)),
+          'hard2': pygame.transform.scale(pygame.image.load('images/hard-mode-2.jpg'), (800, 600)),
+          'hard3': pygame.transform.scale(pygame.image.load('images/hard-mode-3.jpg'), (800, 600)),
+          'hard4': pygame.transform.scale(pygame.image.load('images/hard-mode-4.jpg'), (800, 600)),
+          'hard5': pygame.transform.scale(pygame.image.load('images/hard-mode-5.jpg'), (800, 600)),
+          'hard6': pygame.transform.scale(pygame.image.load('images/hard-mode-6.jpg'), (800, 600)),
+          'hard7': pygame.transform.scale(pygame.image.load('images/hard-mode-7.jpg'), (800, 600)),
+          'hard8': pygame.transform.scale(pygame.image.load('images/hard-mode-8.jpg'), (800, 600)),
+          'hard9': pygame.transform.scale(pygame.image.load('images/hard-mode-9.jpg'), (800, 600)),
+          'hard10': pygame.transform.scale(pygame.image.load('images/hard-mode-10.jpg'), (800, 600)),
+          'hard11': pygame.transform.scale(pygame.image.load('images/hard-mode-11.jpg'), (800, 600)),
           'pena1': pygame.transform.scale(pygame.image.load('images/pena1.png'), (210, 272)),
           'pena2': pygame.transform.scale(pygame.image.load('images/pena2.png'), (210, 272)),
           'pena3': pygame.transform.scale(pygame.image.load('images/pena3.png'), (210, 272)),
@@ -77,6 +79,15 @@ images = {'player': pygame.transform.scale(pygame.image.load('images/player2.png
           'lose_hard_7': pygame.transform.scale(pygame.image.load('images/lose7.png'), (210, 272)),
           'lose_hard_8': pygame.transform.scale(pygame.image.load('images/lose8.png'), (210, 272)),
           'lose_hard_9': pygame.transform.scale(pygame.image.load('images/lose9.png'), (210, 272))}
+
+
+pygame.mixer.init()
+sounds = {'player_eat': pygame.mixer.Sound('sounds/player_eat.mp3'),
+          'hard_player_eat': pygame.mixer.Sound('sounds/hard_player_eat.mp3'),
+          'hard_pass': pygame.mixer.Sound('sounds/hard_pass.mp3'),
+          'hard_label': pygame.mixer.Sound('sounds/hard_label.mp3'),
+          'hard_lose': pygame.mixer.Sound('sounds/hard_lose.mp3'),
+          'lose_menu': pygame.mixer.Sound('sounds/lose_menu.mp3')}
 
 
 def draw_text(surf, text, size, color, x, y):
@@ -197,6 +208,7 @@ class Game:
             self._lose_animation = Animation(self._player, 1.5, [images[f'vano{i}'] for i in range(1, 7)])
         else:
             self._lose_animation = Animation(self._player, 3, [images[f'lose_hard_{i}'] for i in range(1, 10)])
+            pygame.mixer.Channel(1).play(sounds['hard_lose'])
         self._end_animation = False
         self._animator.add_animation(self._lose_animation)
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (370, 400), _lose_menu_sprites)
@@ -229,10 +241,11 @@ class Game:
         Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
         self._player = Player([images[f'pena{i}'] for i in range(6)], _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
-        self._hard_label = Button(images['hard1'], images['hard1'], (300, 200), _playing_sprites)
+        self._hard_label = Button(images['hard1'], images['hard1'], (0, 0), _label_sprites)
         self._end_animation = False
         self._hard_label_animation = Animation(self._hard_label, 2, [images[f'hard{i}'] for i in range(2, 12)])
         self._animator.add_animation(self._hard_label_animation)
+        pygame.mixer.Channel(1).play(sounds['hard_label'])
 
     def _render_playing(self):
         global health, count_items
@@ -254,12 +267,13 @@ class Game:
                     self.cd = 1
                 elif self.cd == self.gcd:
                     self.cd = 0
-                    Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
+                    Item(images['banana_hard'], 1, random.randint(14, 20), _playing_sprites)
                 else:
                     self.cd += 1
             self._screen.blit(images['background_hard'], (0, 0))
             _playing_sprites.draw(self._screen)
             draw_text(self._screen, str(count_items), 56, (150, 75, 0), 730, 36)
+            _label_sprites.draw(self._screen)
         else:
             _playing_sprites.update()
             if health == 3:
@@ -271,7 +285,7 @@ class Game:
                 self.cd = 1
             elif self.cd == self.gcd:
                 self.cd = 0
-                Item(images['item_jungle'], random.randint(6, 12), _playing_sprites)
+                Item(images['item_jungle'], 0, random.randint(6, 12), _playing_sprites)
             else:
                 self.cd += 1
             background = ['background_jungle', 'background_engine', 'background_wings'][self.playing_mode]
@@ -299,6 +313,7 @@ class Game:
     def _render_lose_menu(self):
         if self._lose_animation in self._animator.urn:
             self._end_animation = True
+            pygame.mixer.Channel(0).play(sounds['lose_menu'])
         if self._end_animation:
             _lose_menu_sprites.update()
             self._screen.blit(images['background_lose_menu'], (0, 0))
@@ -358,7 +373,6 @@ class Animation:
 
     def update(self):
         if self.counter % self.speed == 0:
-            print(self.counter, self.speed, self.time)
             self.obj.change_image(self.images[self.counter // self.speed])
         self.counter += 1
         if self.counter == self.time - 1:
@@ -390,11 +404,12 @@ class Player(pygame.sprite.Sprite):
 
 
 class Item(pygame.sprite.Sprite):
-    def __init__(self, sprite_img, speed, *groups):
+    def __init__(self, sprite_img, mode, speed, *groups):
         super().__init__(_all_sprites, *groups)
         self.x, self.y = 680, random.randint(10, 440)
         self._init_sprite(sprite_img)
         self.speed = speed
+        self.mode = mode
         self.out = False
 
     def _init_sprite(self, sprite_img):
@@ -417,8 +432,16 @@ class Item(pygame.sprite.Sprite):
             if self.x <= 140 and not self.out:
                 if self.y in range(player_y - 100, player_y - 20) and not self.out:
                     self.kill()
+                    if self.mode == 0:
+                        pygame.mixer.Channel(0).play(sounds['player_eat'])
+                    else:
+                        pygame.mixer.Channel(0).play(sounds['hard_player_eat'])
                     count_items += 1
                 elif self.x <= -100:
+                    if self.mode == 0:
+                        pass
+                    else:
+                        pygame.mixer.Channel(1).play(sounds['hard_pass'])
                     health += 1
                     self.out = True
 
