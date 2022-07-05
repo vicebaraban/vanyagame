@@ -268,7 +268,7 @@ class Game:
 
     def _render_playing(self):
         global health, count_items
-        if count_items == 1 and self.playing_mode != 3:
+        if count_items == 30 and self.playing_mode != 3:
             _playing_sprites.update()
             self._init_hard_playing()
         elif self.playing_mode == 3:
