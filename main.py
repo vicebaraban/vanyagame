@@ -87,7 +87,16 @@ sounds = {'player_eat': pygame.mixer.Sound('sounds/player_eat.mp3'),
           'hard_pass': pygame.mixer.Sound('sounds/hard_pass.mp3'),
           'hard_label': pygame.mixer.Sound('sounds/hard_label.mp3'),
           'hard_lose': pygame.mixer.Sound('sounds/hard_lose.mp3'),
-          'lose_menu': pygame.mixer.Sound('sounds/lose_menu.mp3')}
+          'lose_menu': pygame.mixer.Sound('sounds/lose_menu.mp3'),
+          'button': pygame.mixer.Sound('sounds/button.mp3'),
+          'button_on': pygame.mixer.Sound('sounds/button_on.mp3'),
+          'normal_lose': pygame.mixer.Sound('sounds/lose_normal.mp3'),
+          'hard': pygame.mixer.Sound('sounds/hard.mp3'),
+          'engine': pygame.mixer.Sound('sounds/engine.mp3'),
+          'jungle': pygame.mixer.Sound('sounds/jungle.mp3'),
+          'wings': pygame.mixer.Sound('sounds/wings.mp3'),
+          'normal_pass': pygame.mixer.Sound('sounds/normal_pass.mp3'),
+          'main_menu': pygame.mixer.Sound('sounds/main_menu.mp3')}
 
 
 def draw_text(surf, text, size, color, x, y):
@@ -153,14 +162,17 @@ class Game:
                 if self._button_exit.in_mouse():
                     self._terminate()
                 if self._button_jungle.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.PLAYING
                     self.playing_mode = 0
                     self._init_playing()
                 if self._button_engine.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.PLAYING
                     self.playing_mode = 1
                     self._init_playing()
                 if self._button_wings.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.PLAYING
                     self.playing_mode = 2
                     self._init_playing()
@@ -171,9 +183,11 @@ class Game:
                 self._terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self._button_play.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.PLAYING
                     _pause_menu_sprites.update(kill=True)
                 if self._button_menu.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.MAIN_MENU
                     self._init_main_menu()
 
@@ -183,6 +197,7 @@ class Game:
                 self._terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self._button_menu.in_mouse():
+                    pygame.mixer.Channel(3).play(sounds['button_on'])
                     self.game_state = GameState.MAIN_MENU
                     self._init_main_menu()
 
@@ -204,10 +219,12 @@ class Game:
         self._button_menu = Button(images['button_exit'], images['button_exit_on'], (400, 300), _pause_menu_sprites)
 
     def _init_lose_menu(self, hard=False):
+        pygame.mixer.Channel(5).stop()
         if not hard:
             self._lose_animation = Animation(self._player, 1.5, [images[f'vano{i}'] for i in range(1, 7)])
+            pygame.mixer.Channel(1).play(sounds['normal_lose'])
         else:
-            self._lose_animation = Animation(self._player, 3, [images[f'lose_hard_{i}'] for i in range(1, 10)])
+            self._lose_animation = Animation(self._player, 2.2, [images[f'lose_hard_{i}'] for i in range(1, 10)])
             pygame.mixer.Channel(1).play(sounds['hard_lose'])
         self._end_animation = False
         self._animator.add_animation(self._lose_animation)
@@ -221,6 +238,7 @@ class Game:
                                      _main_menu_sprites)
         self._button_wings = Button(images['button_wings'], images['button_wings_on'], (250, 350), _main_menu_sprites)
         self._button_exit = Button(images['button_exit'], images['button_exit_on'], (720, 20), _main_menu_sprites)
+        pygame.mixer.Channel(5).play(sounds['main_menu'], -1)
 
     def _init_playing(self):
         global count_items, health
@@ -231,6 +249,7 @@ class Game:
         Item(images['item_jungle'], random.randint(6, 12), _playing_sprites)
         self._player = Player((images['player'], images['player2'], images['player3']), _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
+        pygame.mixer.Channel(5).play([sounds['jungle'], sounds['engine'], sounds['wings']][self.playing_mode], -1)
 
     def _init_hard_playing(self):
         global health
@@ -238,7 +257,7 @@ class Game:
         self.cd = self.gcd = 0
         self.playing_mode = 3
         _all_sprites.update(kill=True)
-        Item(images['item_jungle'], random.randint(14, 20), _playing_sprites)
+        pygame.mixer.Channel(5).stop()
         self._player = Player([images[f'pena{i}'] for i in range(6)], _playing_sprites)
         self._button_clear = Button(images['button_clear'], images['button_clear'], (700, 40), _playing_sprites)
         self._hard_label = Button(images['hard1'], images['hard1'], (0, 0), _label_sprites)
@@ -249,13 +268,14 @@ class Game:
 
     def _render_playing(self):
         global health, count_items
-        if count_items == 3 and self.playing_mode != 3:
+        if count_items == 1 and self.playing_mode != 3:
             _playing_sprites.update()
             self._init_hard_playing()
         elif self.playing_mode == 3:
             if self._hard_label_animation in self._animator.urn:
                 self._end_animation = True
                 self._hard_label.kill()
+                pygame.mixer.Channel(5).play(sounds['hard'], -1)
             if self._end_animation:
                 _playing_sprites.update()
                 if health == 6:
@@ -313,7 +333,7 @@ class Game:
     def _render_lose_menu(self):
         if self._lose_animation in self._animator.urn:
             self._end_animation = True
-            pygame.mixer.Channel(0).play(sounds['lose_menu'])
+            pygame.mixer.Channel(5).play(sounds['lose_menu'])
         if self._end_animation:
             _lose_menu_sprites.update()
             self._screen.blit(images['background_lose_menu'], (0, 0))
@@ -439,7 +459,7 @@ class Item(pygame.sprite.Sprite):
                     count_items += 1
                 elif self.x <= -100:
                     if self.mode == 0:
-                        pass
+                        pygame.mixer.Channel(0).play(sounds['normal_pass'])
                     else:
                         pygame.mixer.Channel(1).play(sounds['hard_pass'])
                     health += 1
@@ -476,6 +496,7 @@ class Button(pygame.sprite.Sprite):
         if self.in_mouse() and not self.active:
             self._init_sprite(self.sprite_img_on)
             self.active = True
+            pygame.mixer.Channel(1).play(sounds['button'])
         elif self.active and not self.in_mouse():
             self._init_sprite(self.sprite_img)
             self.active = False
